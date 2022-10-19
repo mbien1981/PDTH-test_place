@@ -21,7 +21,13 @@ module:hook("OnModuleLoading", "load_test_place", function(module)
 		return
 	end
 
-	if Global.game_settings and not Global.game_settings.single_player then
+	local game_settings = Global.game_settings
+
+	if not game_settings or game_settings and not game_settings.single_player then
+		return
+	end
+
+	if game_settings.level_id ~= "apartment" then
 		return
 	end
 
@@ -56,19 +62,22 @@ module:hook("OnModuleLoading", "load_test_place", function(module)
 			or not game_state_machine
 			or not string.find(game_state_machine:current_state_name(), "game")
 		then
-			for _, level in pairs({
-				"apartment",
-				"bank",
-				"bridge",
-				"diamondheist",
-				"l4d",
-				"secret_stash",
-				"slaughterhouse",
-				"street",
-				"suburbia",
+			for _, package in pairs({
+				"levels/apartment/world",
+				"levels/bank/world",
+				"levels/bridge/world",
+				"levels/diamondheist/world",
+				"levels/l4d/world",
+				"levels/secret_stash/world",
+				"levels/slaughterhouse/world",
+				"levels/street/world",
+				"levels/suburbia/world",
+				"packages/level_slaughterhouse",
+				"packages/level_suburbia",
+				"packages/level_hospital",
 			}) do
-				if PackageManager:loaded(string.format("levels/%s/world", level)) then
-					PackageManager:unload(string.format("levels/%s/world", level))
+				if PackageManager:loaded(package) then
+					PackageManager:unload(package)
 				end
 			end
 		end
