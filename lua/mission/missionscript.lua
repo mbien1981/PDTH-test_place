@@ -2,6 +2,8 @@ core:import("CoreMissionScriptElement")
 core:import("CoreClass")
 MissionScriptElement = MissionScriptElement or class(CoreMissionScriptElement.MissionScriptElement)
 
+local _updator = rawget(_G, "_updator")
+local test_place_md = rawget(_G, "test_place_md")
 local module = ... or D:module(test_place_md.id)
 local MissionScriptElement = module:hook_class("MissionScriptElement")
 
@@ -131,7 +133,7 @@ local spawn_enemy = function(enemy, position, offset, rotation, func)
 
 	unit:brain():set_spawn_ai(spawn_ai)
 	unit:movement():set_allow_fire(false)
-	managers.secret_assignment:register_unit(unit)
+	-- managers.secret_assignment:register_unit(unit)
 
 	unit:brain().set_logic = function() end
 	unit:movement()._upd_actions = function() end
@@ -242,7 +244,7 @@ local create_museum = function()
 		managers.player:warp_to(Vector3(-4505, 6032, 2935), Rotation())
 	end)
 
-	spawn_button(Vector3(-4465, 5920, 3065), Rotation(90, 90, 0), "Teleport back to the building", function()
+	spawn_button(Vector3(-4458, 5920, 3065), Rotation(90, 90, 0), "Teleport back to the building", function()
 		managers.player:warp_to(Vector3(-1845, 745, 1675), Rotation())
 	end)
 
@@ -264,6 +266,11 @@ local create_museum = function()
 	local special_units = { "tank", "taser", "shield", "spooc" }
 	for i, enemy in pairs(special_units) do
 		spawn_enemy(enemy, Vector3(-5220, 6080, 3500), Vector3(0, 200, 0) * i, Rotation(-90, 0, 0), display_unit)
+	end
+
+	local murky_units = { "murky_water1", "murky_water2" }
+	for i, enemy in pairs(murky_units) do
+		spawn_enemy(enemy, Vector3(-4920, 6080, 3500), Vector3(0, 200, 0) * i, Rotation(-90, 0, 0), display_unit)
 	end
 end
 
@@ -303,6 +310,10 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 		_environment = 2,
 	})
 
+	if not PackageManager:loaded("packages/level_slaughterhouse") then
+		PackageManager:load("packages/level_slaughterhouse")
+	end
+
 	create_museum()
 
 	-- * enemy spawner
@@ -324,12 +335,9 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 		end
 
 		for i, enemy in pairs({
+			"murky_water1",
+			"murky_water2",
 			"swat_kevlar1",
-			"swat_kevlar1",
-			"swat_kevlar1",
-			"swat_kevlar2",
-			"swat_kevlar2",
-			"swat_kevlar2",
 			"swat_kevlar2",
 			"sniper",
 			"tank",
@@ -446,6 +454,7 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 		_updator:remove("weapon_display")
 
 		local weapon_data = test_area_data.weapon_data
+		local PlayerInventory = _G.PlayerInventory
 		local weapon_list = PlayerInventory._index_to_weapon_list
 		if weapon_data.unit then
 			delete_unit(weapon_data.unit)
