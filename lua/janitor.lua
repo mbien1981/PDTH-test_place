@@ -299,10 +299,6 @@ if not rawget(_G, "Janitor") then
 
 		_updator:add(function()
 			if start_p > max_items then
-				if managers.chat then
-					managers.chat:receive_message("Janitor", string.format("Removed %d units.", max_items), Color.red)
-				end
-
 				_updator:remove("removeasdjklaskjdlasjld")
 
 				return
