@@ -3,8 +3,8 @@ if not rawget(_G, "Janitor") then
 		_all_unit_data = {},
 		_selected_unit = nil,
 		_last_active_unit = nil,
-		_compressed_file_path = test_place_md.path .. "data/heist_units_compressed.lua",
-		_uncompressed_file_path = test_place_md.path .. "data/heist_units_uncompressed.lua",
+		_compressed_file_path = module:path() .. "data/heist_units_compressed.lua",
+		_uncompressed_file_path = module:path() .. "data/heist_units_uncompressed.lua",
 	})
 
 	function Janitor:current_time()
@@ -136,11 +136,11 @@ if not rawget(_G, "Janitor") then
 	end
 
 	function Janitor:show_selected_unit()
-		_updator:remove("unitalksjdkasd")
-		_updator:remove("asdasdasdsadasd")
+		_G._updator:remove("unitalksjdkasd")
+		_G._updator:remove("asdasdasdsadasd")
 
 		local units_in_world = {}
-		_updator:add(function()
+		_G._updator:add(function()
 			units_in_world = {}
 			local lp_pos = managers.player:player_unit():movement():m_pos()
 			for _, unit in pairs(World:find_units_quick("all")) do
@@ -150,7 +150,7 @@ if not rawget(_G, "Janitor") then
 			end
 		end, "asdasdasdsadasd", 0.25)
 
-		_updator:add(function()
+		_G._updator:add(function()
 			local should_show_pos = false --draws a circle at the pos
 			local should_show_all = false --draws a box around the unit
 			local _, to = self:ray_forward(500)
@@ -297,9 +297,9 @@ if not rawget(_G, "Janitor") then
 			units_in_world_2[unit:editor_id()] = unit
 		end
 
-		_updator:add(function()
+		_G._updator:add(function()
 			if start_p > max_items then
-				_updator:remove("removeasdjklaskjdlasjld")
+				_G._updator:remove("removeasdjklaskjdlasjld")
 
 				return
 			end
@@ -318,7 +318,7 @@ if not rawget(_G, "Janitor") then
 	end
 end
 
-local module = ... or D:module(test_place_md.id)
+local module = ... or D:module("test_place_mutator")
 local GameSetup = module:hook_class("GameSetup")
 
 module:post_hook(50, GameSetup, "init_finalize", function(self)

@@ -1,20 +1,21 @@
-local module = ... or D:module(test_place_md.id)
 local PlayerStandard = module:hook_class("PlayerStandard")
-
 module:post_hook(PlayerStandard, "init", function(self)
 	local _tracker = rawget(_G, "_tracker")
-	if not _tracker then
+	local _updator = rawget(_G, "_updator")
+	if not _tracker or not _updator then
 		return
 	end
 
-	_tracker:remove_tracker("player_pos")
-	_tracker:remove_tracker("player_rot")
-	_tracker:remove_tracker("player_lookat")
+	_tracker:remove("player_pos")
+	_tracker:remove("player_rot")
+	_tracker:remove("player_fwd")
+	_tracker:remove("player_lookat")
 	_updator:remove("debug_player")
 
-	_tracker:add_tracker("pos", "0, 0, 0", "player_pos")
-	_tracker:add_tracker("rot", "0, 0, 0", "player_rot")
-	_tracker:add_tracker("lookat", "0, 0, 0", "player_lookat")
+	_tracker:add("pos", "0, 0, 0", "player_pos")
+	_tracker:add("rot", "0, 0, 0", "player_rot")
+	_tracker:add("fwd", "0, 0, 0", "player_fwd")
+	_tracker:add("lookat", "0, 0, 0", "player_lookat")
 
 	_updator:add(function()
 		local unit = self._unit
@@ -22,8 +23,9 @@ module:post_hook(PlayerStandard, "init", function(self)
 			return
 		end
 
-		_tracker:update_tracker("player_pos", tostring(unit:position()))
-		_tracker:update_tracker("player_rot", tostring(unit:camera():rotation()))
+		_tracker:update("player_pos", tostring(unit:position()))
+		_tracker:update("player_rot", tostring(unit:camera():rotation()))
+		_tracker:update("player_fwd", tostring(unit:camera():forward()))
 
 		local ray_forward = function()
 			local player = managers.player:player_unit()
@@ -43,27 +45,27 @@ module:post_hook(PlayerStandard, "init", function(self)
 		end
 
 		Application:draw_sphere(to, 5, 0, 1, 0)
-		_tracker:update_tracker("player_lookat", tostring(to))
-	end, "debug_player", 0)
+		_tracker:update("player_lookat", tostring(to))
+	end, "debug_player")
 end)
 
-module:hook(PlayerStandard, "_get_input", function(self, t, dt, paused)
-	local input = module:call_orig(PlayerStandard, "_get_input", self, t, dt, paused)
-	local data_shit = {
-		data = {
-			jump = true,
-		},
-		keys = {
-			jump = "btn_jump_press",
-		},
-	}
+-- module:hook(PlayerStandard, "_get_input", function(self, t, dt, paused)
+-- 	local input = module:call_orig(PlayerStandard, "_get_input", self, t, dt, paused)
+-- 	local data_shit = {
+-- 		data = {
+-- 			jump = true,
+-- 		},
+-- 		keys = {
+-- 			jump = "btn_jump_press",
+-- 		},
+-- 	}
 
-	for btn, on in pairs(data_shit.data) do
-		local shit = data_shit.keys[btn]
-		if on and input[shit] == false then
-			input[shit] = self._controller:get_input_bool(btn)
-		end
-	end
+-- 	for btn, on in pairs(data_shit.data) do
+-- 		local shit = data_shit.keys[btn]
+-- 		if on and input[shit] == false then
+-- 			input[shit] = self._controller:get_input_bool(btn)
+-- 		end
+-- 	end
 
-	return input
-end)
+-- 	return input
+-- end)

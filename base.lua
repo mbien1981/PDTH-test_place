@@ -1,38 +1,21 @@
 local module = DMod:new("test_place_mutator", {
 	author = "Dr_Newbie",
+	version = "6",
 	categories = { "gameplay", "mutator" },
-	dependency = "ovk_193",
+	dependencies = { "_sdk", "ovk_193" },
 	localization = {
 		{ "mutator_test_place_mutator", "Test place" },
 		{ "mutator_test_place_mutator_help", "" },
 		{ "mutator_test_place_mutator_motd", "" },
 	},
-	version = "5",
-})
-
-rawset(_G, "test_place_md", {
-	id = module:id(),
-	path = ModPath,
 })
 
 module:hook("OnModuleLoading", "load_test_place", function(module)
 	local mutator_availability = { all = { levels = { apartment = true } } }
-	if not MutatorHelper.setup_mutator(module, module:id(), mutator_availability, nil, nil, true) then
+
+	if not MutatorHelper.setup_mutator(module, module:id(), mutator_availability, {}, true, true) then
 		return
 	end
-
-	local game_settings = Global.game_settings
-
-	if not game_settings or game_settings and not game_settings.single_player then
-		return
-	end
-
-	if game_settings.level_id ~= "apartment" then
-		return
-	end
-
-	module:hook_post_require("lib/setups/setup", "lua/lib/updator")
-	module:hook_post_require("core/lib/setups/coresetup", "lua/lib/updator")
 
 	-- remove units
 	module:hook_post_require("lib/setups/gamesetup", "lua/janitor")
@@ -55,33 +38,8 @@ module:hook("OnModuleLoading", "load_test_place", function(module)
 	module:hook_post_require("lib/managers/mission/elementwaypoint", "lua/mission/waypoint")
 	module:hook_post_require("lib/managers/mission/missionscriptelement", "lua/mission/missionscript")
 
-	if PackageManager then
-		if
-			not Global.game_settings
-			or not Global.game_settings.level_id
-			or not game_state_machine
-			or not string.find(game_state_machine:current_state_name(), "game")
-		then
-			for _, package in pairs({
-				"levels/apartment/world",
-				"levels/bank/world",
-				"levels/bridge/world",
-				"levels/diamondheist/world",
-				"levels/l4d/world",
-				"levels/secret_stash/world",
-				"levels/slaughterhouse/world",
-				"levels/street/world",
-				"levels/suburbia/world",
-				"packages/level_slaughterhouse",
-				"packages/level_suburbia",
-				"packages/level_hospital",
-			}) do
-				if PackageManager:loaded(package) then
-					PackageManager:unload(package)
-				end
-			end
-		end
-	end
+	-- Package loading
+	module:hook_post_require("lib/setups/gamesetup", "lua/gamesetup")
 end)
 
 return module

@@ -1,12 +1,7 @@
-local module = ... or D:module(test_place_md.id)
 local CopDamage = module:hook_class("CopDamage")
 
-CopDamage.DEBUG_HP = true
-
 module:post_hook(50, CopDamage, "init", function(self)
-	if self.DEBUG_HP then
-		self:_create_debug_ws()
-	end
+	self:_create_debug_ws()
 end)
 
 module:post_hook(50, CopDamage, "_on_damage_received", function(self, damage_info)

@@ -3,10 +3,7 @@ core:import("CoreClass")
 MissionScriptElement = MissionScriptElement or class(CoreMissionScriptElement.MissionScriptElement)
 
 local _updator = rawget(_G, "_updator")
-local test_place_md = rawget(_G, "test_place_md")
-local module = ... or D:module(test_place_md.id)
 local MissionScriptElement = module:hook_class("MissionScriptElement")
-
 module:post_hook(MissionScriptElement, "init", function(self)
 	-- * disable team AI
 	Global.criminal_team_AI_disabled = true
@@ -23,23 +20,6 @@ local disable_collision = function(unit)
 			body:set_enabled(false)
 		end
 	end
-end
-
-local light_obj = function(pos, rotation)
-	local light_yes = World:create_light("omni|specular")
-	light_yes:set_far_range(550)
-	light_yes:set_color(Color.red)
-	light_yes:set_position(pos)
-	light_yes:set_enable(true)
-	light_yes:set_multiplier(0.1)
-	light_yes:set_falloff_exponent(0.2)
-
-	World:effect_manager():spawn({
-		effect = Idstring("effects/particles/weapons/flashlight/flashlight"),
-		position = pos,
-		rotation = rotation,
-		normal = math.UP,
-	})
 end
 
 local spawn_interaction = function(position, rotation, text, func)
@@ -94,8 +74,6 @@ local spawn_button = function(position, rotation, text, func)
 	if not lamp then
 		return
 	end
-
-	light_obj(position, lamp:rotation())
 
 	-- ! Game crashes when your mover collides with the button
 	disable_collision(lamp)
@@ -213,8 +191,6 @@ local display_unit = function(unit)
 	disable_collision(unit)
 	unit:character_damage():set_invulnerable(true)
 
-	light_obj(unit:position(), unit:rotation())
-
 	_updator:add(function()
 		if not alive(unit) then
 			return
@@ -274,31 +250,19 @@ local create_museum = function()
 	end
 end
 
-local load_world_packages = function()
-	if test_area_data.packages_loaded then
-		return
-	end
-
-	test_area_data.packages_loaded = true
-
-	for _, level in pairs({
-		"apartment",
-		"bank",
-		"bridge",
-		"diamondheist",
-		"l4d",
-		"secret_stash",
-		"slaughterhouse",
-		"street",
-		"suburbia",
-	}) do
-		if not PackageManager:loaded(string.format("levels/%s/world", level)) then
-			PackageManager:load(string.format("levels/%s/world", level))
+local despawn_bags = function()
+	local data = test_area_data.bags or {}
+	if next(data) then
+		for k, unit in pairs(data) do
+			if alive(unit) then
+				unit:base():_set_empty()
+				data[k] = nil
+			end
 		end
 	end
 end
 
-module:post_hook(MissionScriptElement, "on_executed", function(self)
+module:post_hook(MissionScriptElement, "on_executed", function()
 	if rawget(_G, "test_area_data") then
 		return
 	end
@@ -312,6 +276,7 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 
 	if not PackageManager:loaded("packages/level_slaughterhouse") then
 		PackageManager:load("packages/level_slaughterhouse")
+		PackageManager:load("levels/bank/world")
 	end
 
 	create_museum()
@@ -322,7 +287,6 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 	spawn_text(Vector3(-850, 340, 1735), Rotation(180, 90, 0), "Enemies") -- back
 	spawn_button(Vector3(-905, 275, 1780), Rotation(0, 180, 0), "Spawn Enemies", function()
 		local data = test_area_data.enemies or {}
-
 		if next(data) then
 			for i, unit in ipairs(data) do
 				if alive(unit) then
@@ -330,21 +294,12 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 					unit:character_damage():die()
 					unit:set_slot(0)
 				end
+
 				data[i] = nil
 			end
 		end
 
-		for i, enemy in pairs({
-			"murky_water1",
-			"murky_water2",
-			"swat_kevlar1",
-			"swat_kevlar2",
-			"sniper",
-			"tank",
-			"taser",
-			"spooc",
-			"shield",
-		}) do
+		for i, enemy in pairs({ "murky_water1", "swat_kevlar1", "sniper", "tank", "taser", "spooc", "shield" }) do
 			table.insert(test_area_data.enemies, spawn_enemy(enemy, Vector3(-520, 1200, 1677), Vector3(-75, 0, 0) * i))
 		end
 	end)
@@ -354,35 +309,18 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 	spawn_text(Vector3(-765, 310, 1782.5), Rotation(0, -5, 0), "Bags")
 	spawn_text(Vector3(-705, 340, 1735), Rotation(180, 90, 0), "Bags")
 	spawn_button(Vector3(-732, 275, 1780), Rotation(0, 180, 0), "Spawn bags", function()
-		local data = test_area_data.bags or {}
+		despawn_bags()
 
-		if next(data) then
-			for k, unit in pairs(data) do
-				if alive(unit) then
-					unit:base():_set_empty()
-					data[k] = nil
-				end
-			end
-		end
-
-		table.insert(data, DoctorBagBase.spawn(Vector3(-780, 275, 1780), Rotation(90, 0, 0)))
-		table.insert(data, AmmoBagBase.spawn(Vector3(-680, 275, 1780), Rotation(90, 0, 0)))
+		table.insert(test_area_data.bags, DoctorBagBase.spawn(Vector3(-780, 275, 1780), Rotation(90, 0, 0)))
+		table.insert(test_area_data.bags, AmmoBagBase.spawn(Vector3(-680, 275, 1780), Rotation(90, 0, 0)))
 	end)
 
-	-- * test
+	-- * test button
 	spawn_text(Vector3(-595, 210, 1735), Rotation(0, 90, 0), "Test")
 	spawn_text(Vector3(-595, 310, 1782.5), Rotation(0, -5, 0), "Test")
 	spawn_text(Vector3(-530, 340, 1735), Rotation(180, 90, 0), "Test")
 	spawn_button(Vector3(-560, 275, 1780), Rotation(0, 180, 0), "Test", function()
-		local data = test_area_data.bags or {}
-		if next(data) then
-			for k, unit in pairs(data) do
-				if alive(unit) then
-					unit:base():_set_empty()
-					data[k] = nil
-				end
-			end
-		end
+		despawn_bags()
 
 		local equipmentList = {
 			[1] = "DoctorBagBase",
@@ -418,38 +356,29 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 
 		local unit_id = true
 		local sphere = get_sphere_points_with_rotation(Vector3(-140, 545, 1925), 15, 250)
-		for _, v in pairs(sphere) do
-			spawnUnit(unit_id, v.pos, v.rot)
-			unit_id = not unit_id
-		end
-	end)
-
-	-- * clear bags
-	spawn_button(Vector3(-140, 545, 1676), Rotation(0, 180, 0), "Remove bags", function()
-		local data = test_area_data.bags or {}
-		if next(data) then
-			for k, unit in pairs(data) do
-				if alive(unit) then
-					unit:base():_set_empty()
-					data[k] = nil
-				end
+		if sphere then
+			for _, v in pairs(sphere) do
+				spawnUnit(unit_id, v.pos, v.rot)
+				unit_id = not unit_id
 			end
 		end
 	end)
 
-	-- * roof access
+	-- * clear bags
+	spawn_button(Vector3(-140, 545, 1676), Rotation(0, 180, 0), "Remove bags", despawn_bags)
+
+	-- * roof accesses
 	spawn_button(Vector3(-1950, 605, 125), Rotation(90, 90, 0), "Teleport back to the roof", function()
 		managers.player:warp_to(Vector3(-1845, 745, 1675), Rotation())
 	end)
-
 	spawn_button(Vector3(450, 605, 70), Rotation(90, -90, 0), "Teleport back to the roof", function()
 		managers.player:warp_to(Vector3(330, 600, 1675), Rotation())
 	end)
-
 	spawn_button(Vector3(-3700, -50, 125), Rotation(90, -90, 0), "Teleport back to the roof", function()
 		managers.player:warp_to(Vector3(-335, 1095, 1675), Rotation())
 	end)
 
+	--* weapon selector
 	spawn_button(Vector3(-1065, 275, 1755), Rotation(-90, 225, 0), "Spawn Gun", function()
 		_updator:remove("weapon_display")
 
@@ -479,13 +408,11 @@ module:post_hook(MissionScriptElement, "on_executed", function(self)
 			weapon_data.unit:set_rotation(Rotation(weapon_data.unit:rotation():yaw() + 1, 0, 0))
 		end, "weapon_display", 0)
 	end)
-
 	spawn_text(Vector3(-1090, 310, 1705), Rotation(-90, 75, 0), "Guns")
 
+	-- * environment selector
 	spawn_text(Vector3(-645, -72, 1724), Rotation(180, 90, 0), "Environment")
 	spawn_button(Vector3(-732, -88, 1768), Rotation(0, 180, 0), "Change environment", function()
-		load_world_packages()
-
 		local environments = {
 			[1] = "environments/env_apartment/env_apartment",
 			[2] = "environments/env_bank/env_bank",
